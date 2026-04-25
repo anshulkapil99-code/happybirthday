@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Birthday ❤️</title>
+    <style>
+        :root { --text: #ffffff; --accent: #ff4d6d; --secondary: #4cc9f0; --game: #2ecc71; --gold: #d4af37; }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; color: var(--text); overflow-x: hidden; background: black; padding-bottom: 50px; }
+        #main-content { display: none; opacity: 0; transition: opacity 2s ease; }
+        
+        /* 🌌 Background */
+        .stars { position: fixed; width: 100%; height: 100%; background: black; z-index: -3; }
+        .star { position: absolute; background: white; border-radius: 50%; }
+        .bg { position: fixed; width: 100%; height: 120%; background: url("background.png") no-repeat center/cover; z-index: -2; }
+        .overlay { position: fixed; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: -1; }
+
+        /* 🎬 INTRO SEQUENCE */
+        #intro-sequence { position: fixed; width: 100%; height: 100%; background: black; display: none; justify-content: center; align-items: center; z-index: 100; overflow: hidden; }
+        #intro-text-seed { font-size: 3rem; position: absolute; opacity: 0; transition: all 2.5s ease; }
+
+        /* BIG GROUND HEART */
+        #ground-heart-outline { position: absolute; bottom: 50%; transform: translateY(50%); width: 600px; height: 600px; opacity: 0; z-index: 102; transition: opacity 2s ease; display: flex; justify-content: center; align-items: center; }
+        #ground-heart-outline svg { position: absolute; width: 100%; height: 100%; fill: rgba(255, 77, 109, 0.1); stroke: var(--accent); stroke-width: 1; }
+        #challenge-card { position: relative; width: 80%; max-width: 300px; text-align: center; z-index: 110; opacity: 0; display: none; transition: opacity 1s ease; }
+        .challenge-btn { background: var(--accent); color: white; border: none; padding: 12px 30px; border-radius: 50px; cursor: pointer; font-weight: bold; margin-top: 15px; }
+
+        /* UI Elements */
+        .glass { background: rgba(255,255,255,0.02); backdrop-filter: blur(15px); border-radius: 20px; padding: 30px; margin: 20px auto; width: 90%; max-width: 600px; text-align: center; border: 1px solid rgba(255,255,255,0.1); overflow: visible; }
+        .countdown { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+        .box { background: rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; min-width: 60px; }
+        .tagline { margin-top: 20px; font-weight: bold; color: var(--accent); }
+
+        /* General Buttons */
+        .btn-cake, .btn-video, .btn-pdf { background: var(--accent); color: white; border: none; padding: 12px 25px; border-radius: 50px; cursor: pointer; font-weight: bold; margin-top: 10px; transition: 0.3s; text-decoration: none; display: inline-block; width: 90%; max-width: 600px; display: block; margin: 10px auto; font-size: 1.1rem; box-shadow: 0 4px 15px rgba(255, 77, 109, 0.3); }
+        .btn-cake:hover, .btn-video:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(255, 77, 109, 0.5); }
+        .btn-balloons { background: var(--secondary); box-shadow: 0 4px 15px rgba(76, 201, 240, 0.3); }
+        .btn-snake { background: var(--game); box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3); }
+
+        /* ✉️ PREMIUM LETTER BOX BUTTON */
+        .btn-envelope {
+            background: linear-gradient(135deg, #8e0e00 0%, #1f1c18 100%);
+            border: 2px solid var(--gold) !important;
+            color: var(--gold) !important;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
+            transition: all 0.4s ease;
+        }
+        .btn-envelope::after {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%; width: 200%; height: 200%;
+            background: rgba(255, 255, 255, 0.1);
+            transform: rotate(45deg);
+            transition: 0.6s;
+        }
+        .btn-envelope:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 10px 25px rgba(212, 175, 55, 0.4);
+            background: linear-gradient(135deg, #a71200 0%, #2c2824 100%);
+        }
+        .btn-envelope:hover::after { left: 100%; }
+        .envelope-icon { margin-right: 10px; font-size: 1.2rem; filter: drop-shadow(0 0 5px #d4af37); }
+
+        /* Others */
+        .song-item { background: rgba(255,255,255,0.08); margin: 8px 0; padding: 12px; border-radius: 12px; cursor: pointer; display: flex; justify-content: space-between; transition: 0.3s; }
+        .song-item:hover { background: rgba(255, 77, 109, 0.3); transform: translateX(5px); }
+        #gift-box { font-size: 80px; cursor: pointer; transition: transform 0.3s; display: inline-block; }
+        #msg { display: none; margin-top: 20px; padding: 20px; background: rgba(255, 77, 109, 0.25); border-radius: 15px; border: 1px solid var(--accent); animation: fadeIn 1s; }
+        .gallery img { width: 100px; height: 130px; margin: 5px; border-radius: 10px; object-fit: cover; transition: transform 0.4s ease; cursor: zoom-in; }
+        .gallery img:hover { transform: scale(1.6); z-index: 10; }
+        .heart-float { position: fixed; bottom: -20px; animation: floatUp linear forwards; z-index: 5; pointer-events: none; }
+        
+        @keyframes floatUp { to { transform: translateY(-110vh); opacity: 0; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+<div id="intro-sequence">
+    <div id="intro-text-seed">For YOU ❤️</div>
+    <div id="ground-heart-outline">
+        <svg viewBox="0 0 100 100"><path d="M 10,30 A 20,20 0,0,1 50,30 A 20,20 0,0,1 90,30 Q 90,60 50,90 Q 10,60 10,30 z"/></svg>
+        <div id="challenge-card">
+            <h3>Are you REALLY ready for this?</h3>
+            <button class="challenge-btn" onclick="revealBirthday()">YES, I'M READY!</button>
+        </div>
+    </div>
+</div>
+
+<div id="main-content">
+    <div class="stars" id="stars"></div>
+    <div class="bg" id="bg"></div>
+    <div class="overlay"></div>
+    <audio id="bgMusic" loop><source src="song.mp3" type="audio/mp3"></audio>
+
+    <div class="glass">
+        <h1>HAPPY BIRTHDAY</h1>
+        <div class="countdown">
+            <div class="box"><span id="yrs">00</span><br>Yrs</div>
+            <div class="box"><span id="mon">00</span><br>Mon</div>
+            <div class="box"><span id="d">00</span><br>Day</div>
+            <div class="box"><span id="h">00</span><br>Hr</div>
+            <div class="box"><span id="m">00</span><br>Min</div>
+            <div class="box"><span id="s">00</span><br>Sec</div>
+        </div>
+        <div class="tagline">YOU'LL ALWAYS BE 16 AND HOT... AND MINE</div>
+    </div>
+
+    <button class="btn-cake" onclick="window.open('cake.html', '_blank')">🎂 Let's Cut the Cake</button>
+    <button class="btn-cake btn-balloons" onclick="window.open('balloons.html', '_blank')">🎈 Balloon Party!</button>
+    <button class="btn-cake btn-snake" onclick="window.open('snake.html', '_blank')">🐍 Snake Game</button>
+
+    <div class="glass">
+        <h3>Click your surprise 🎁</h3>
+        <div id="gift-box" onclick="revealGift()">🎁</div>
+        <div id="msg"><h2>I Love You ❤️</h2><p>You are my everything! 💖</p></div>
+    </div>
+
+    <button class="btn-video" onclick="checkPassword()">🎥 VANSHIKA CALLING</button>
+    <button class="btn-video btn-envelope" onclick="window.open('letters.html', '_blank')">
+        <span class="envelope-icon">✉️</span> LETTER BOX
+    </button>
+
+    <div class="glass">
+        <h3>Our Memories 📸</h3>
+        <div class="gallery">
+            <img src="photo1.jpg"><img src="photo2.jpg"><img src="photo3.jpeg">
+        </div>
+    </div>
+
+    <div class="glass">
+        <h3>Your Favorites 🎧</h3>
+        <div class="playlist-container">
+            <div class="song-item" onclick="openSong('https://www.youtube.com/watch?v=XJAMVPQWvGY')"><div><b>Sajni Re</b></div><div>▶️</div></div>
+            <div class="song-item" onclick="openSong('https://www.youtube.com/watch?v=mrdRHsIkK_c')"><div><b>Enna Sona</b></div><div>▶️</div></div>
+            <div class="song-item" onclick="openSong('https://www.youtube.com/watch?v=u6zDR5iVoTE')"><div><b>OK Jaanu</b></div><div>▶️</div></div>
+        </div>
+    </div>
+</div>
+
+<script>
+window.onload = function() {
+    if (confirm("YOU ARE NOT READY FOR THIS...")) {
+        if (confirm("YOU ARE STILL NOT READY FOR THIS..")) {
+            document.getElementById("intro-sequence").style.display = "flex";
+            startIntroSequence();
+        } else { location.reload(); }
+    } else { location.reload(); }
+};
+
+function startIntroSequence() {
+    const seed = document.getElementById("intro-text-seed");
+    const groundHeart = document.getElementById("ground-heart-outline");
+    const challenge = document.getElementById("challenge-card");
+    seed.style.opacity = 1;
+    setTimeout(() => { 
+        seed.style.opacity = 0; 
+        setTimeout(() => {
+            groundHeart.style.opacity = 1;
+            setTimeout(() => {
+                challenge.style.display = "block";
+                setTimeout(() => challenge.style.opacity = 1, 100);
+            }, 1000);
+        }, 1000);
+    }, 2000);
+}
+
+function revealBirthday() {
+    const music = document.getElementById("bgMusic");
+    music.play().catch(e => console.log("Audio blocked."));
+    document.getElementById("intro-sequence").style.opacity = 0;
+    setTimeout(() => {
+        document.getElementById("intro-sequence").style.display = "none";
+        document.getElementById("main-content").style.display = "block";
+        initSite();
+        setTimeout(() => document.getElementById("main-content").style.opacity = 1, 100);
+    }, 1500);
+}
+
+function revealGift() { 
+    document.getElementById("gift-box").style.display = "none";
+    document.getElementById("msg").style.display = "block"; 
+}
+
+function openSong(url) { 
+    document.getElementById("bgMusic").pause(); 
+    window.open(url, '_blank'); 
+}
+
+function checkPassword() {
+    let pw = prompt("HINT: What does Vanshika call you?");
+    if (pw && pw.toLowerCase().trim() === "sakhi") {
+        window.open('https://www.youtube.com/shorts/Wo4DAtWOq5Y', '_blank');
+    } else if (pw !== null) alert("Wrong answer! ❤️");
+}
+
+function initSite() {
+    const birth = new Date(2001, 3, 26, 16, 7, 0); 
+    setInterval(() => {
+        const now = new Date();
+        let y = now.getFullYear() - birth.getFullYear(), m = now.getMonth() - birth.getMonth(), d = now.getDate() - birth.getDate();
+        let hh = now.getHours() - birth.getHours(), mm = now.getMinutes() - birth.getMinutes(), ss = now.getSeconds() - birth.getSeconds();
+        if (ss < 0) { ss += 60; mm--; } if (mm < 0) { mm += 60; hh--; } if (hh < 0) { hh += 24; d--; }
+        if (d < 0) { d += new Date(now.getFullYear(), now.getMonth(), 0).getDate(); m--; }
+        if (m < 0) { m += 12; y--; }
+        document.getElementById("yrs").innerText = y; document.getElementById("mon").innerText = m; document.getElementById("d").innerText = d;
+        document.getElementById("h").innerText = hh; document.getElementById("m").innerText = mm; document.getElementById("s").innerText = ss;
+    }, 1000);
+
+    setInterval(() => {
+        let h = document.createElement("div"); h.innerHTML = "❤️"; h.className = "heart-float";
+        h.style.left = Math.random()*100+"vw"; h.style.fontSize = Math.random()*10+10+"px";
+        h.style.animationDuration = Math.random()*3+3+"s";
+        document.body.appendChild(h); setTimeout(() => h.remove(), 6000);
+    }, 500);
+
+    const starCont = document.getElementById("stars");
+    for(let i=0; i<150; i++){
+        let s = document.createElement("div"); s.className = "star";
+        s.style.width = s.style.height = Math.random()*3+"px";
+        s.style.top = Math.random()*100+"vh"; s.style.left = Math.random()*100+"vw";
+        starCont.appendChild(s);
+    }
+}
+</script>
+</body>
+</html>

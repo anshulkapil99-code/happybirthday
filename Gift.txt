@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Big Reveal</title>
+    <style>
+        body {
+            background-color: #fff5f7;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden; 
+            color: #d63384;
+        }
+        h1 { font-size: 3.5rem; margin-bottom: 20px; font-weight: 300; z-index: 10; transition: all 0.5s ease; }
+        .sub-text { font-size: 2rem; margin-top: 20px; font-weight: 300; z-index: 10; }
+        #countdown { display: flex; gap: 15px; text-align: center; z-index: 10; }
+        .time-box {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+            min-width: 85px;
+            backdrop-filter: blur(5px);
+        }
+        .number { display: block; font-size: 2.2rem; font-weight: bold; }
+        .label { font-size: 0.8rem; text-transform: uppercase; color: #999; }
+        
+        .heart {
+            position: absolute;
+            color: #ffb6c1;
+            user-select: none;
+            pointer-events: none;
+            animation: floatUp 4s linear forwards;
+            z-index: 15;
+        }
+        @keyframes floatUp {
+            0% { transform: translateY(110vh) scale(0.5) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(-20vh) scale(2) rotate(360deg); opacity: 0; }
+        }
+        #fwCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
+    </style>
+</head>
+<body>
+
+    <canvas id="fwCanvas"></canvas>
+    <h1 id="mainTitle">Soon Baby <3</h1>
+    <div id="countdown">
+        <div class="time-box"><span class="number" id="days">00</span><span class="label">Days</span></div>
+        <div class="time-box"><span class="number" id="hours">00</span><span class="label">Hours</span></div>
+        <div class="time-box"><span class="number" id="minutes">00</span><span class="label">Mins</span></div>
+        <div class="time-box"><span class="number" id="seconds">00</span><span class="label">Secs</span></div>
+    </div>
+    <div class="sub-text" id="bottomText">to go</div>
+
+    <script>
+        // HEART GENERATOR
+        function createHeart(isStorm = false) {
+            const heart = document.createElement('div');
+            heart.classList.add('heart');
+            heart.innerHTML = '❤️';
+            heart.style.left = Math.random() * 100 + 'vw';
+            heart.style.animationDuration = (Math.random() * (isStorm ? 1.2 : 2) + (isStorm ? 0.8 : 3)) + 's';
+            heart.style.fontSize = (Math.random() * (isStorm ? 60 : 20) + 10) + 'px';
+            document.body.appendChild(heart);
+            setTimeout(() => { heart.remove(); }, 4000);
+        }
+
+        let heartInterval = setInterval(() => createHeart(false), 300);
+
+        // TARGET: April 26, 2026 at 00:00:00
+        const targetDate = new Date("April 26, 2026 00:00:00").getTime();
+        let finished = false;
+
+        const timer = setInterval(function() {
+            const now = new Date().getTime();
+            const distance = targetDate - now;
+
+            const d = Math.max(0, Math.floor(distance / (1000 * 60 * 60 * 24)));
+            const h = Math.max(0, Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)));
+            const m = Math.max(0, Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)));
+            const s = Math.max(0, Math.floor((distance % (1000 * 60)) / 1000));
+
+            document.getElementById("days").innerHTML = d;
+            document.getElementById("hours").innerHTML = h;
+            document.getElementById("minutes").innerHTML = m;
+            document.getElementById("seconds").innerHTML = s;
+
+            if (distance < 0 && !finished) {
+                clearInterval(timer);
+                finished = true;
+                
+                // 1. Update UI immediately
+                document.getElementById("countdown").innerHTML = "<h2>Happy Birthday!</h2>";
+                document.getElementById("bottomText").innerHTML = "The wait is over ❤️";
+                
+                // 2. Start Fireworks for 3 seconds
+                startFireworks();
+                
+                // 3. Trigger Heart Storm after 3 seconds of fireworks
+                setTimeout(() => {
+                    clearInterval(heartInterval); 
+                    document.getElementById("mainTitle").innerHTML = "You are My World";
+                    
+                    // Intense rapid hearts
+                    const storm = setInterval(() => createHeart(true), 20); 
+                    
+                    // 4. Redirect to HBD.html after 3 seconds of hearts
+                    setTimeout(() => {
+                        window.location.href = "HBD.html";
+                    }, 3000);
+                }, 3000);
+            }
+        }, 1000);
+
+        // FIREWORKS LOGIC
+        const canvas = document.getElementById('fwCanvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x; this.y = y; this.color = color;
+                this.velocity = { x: (Math.random() - 0.5) * 12, y: (Math.random() - 0.5) * 12 };
+                this.alpha = 1;
+                this.friction = 0.95;
+            }
+            draw() {
+                ctx.globalAlpha = this.alpha;
+                ctx.beginPath(); ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
+                ctx.fillStyle = this.color; ctx.fill();
+            }
+            update() {
+                this.velocity.x *= this.friction; this.velocity.y *= this.friction;
+                this.x += this.velocity.x; this.y += this.velocity.y;
+                this.alpha -= 0.012;
+            }
+        }
+
+        function spawnFirework() {
+            const x = Math.random() * canvas.width;
+            const y = Math.random() * (canvas.height / 2);
+            const color = `hsl(${Math.random() * 360}, 80%, 60%)`;
+            for (let i = 0; i < 80; i++) particles.push(new Particle(x, y, color));
+        }
+
+        function animateFireworks() {
+            ctx.fillStyle = 'rgba(255, 245, 247, 0.2)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            particles.forEach((p, i) => {
+                if (p.alpha > 0) { p.update(); p.draw(); }
+                else { particles.splice(i, 1); }
+            });
+            requestAnimationFrame(animateFireworks);
+        }
+
+        function startFireworks() {
+            animateFireworks();
+            const fwInterval = setInterval(spawnFirework, 250);
+            // Stop spawning new fireworks after 3s to let the hearts take over
+            setTimeout(() => clearInterval(fwInterval), 3000);
+        }
+    </script>
+</body>
+</html>

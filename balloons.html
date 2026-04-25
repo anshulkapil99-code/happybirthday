@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ultimate Birthday Game 👑🎂</title>
+
+<style>
+body {
+    margin:0;
+    overflow:hidden;
+    font-family:'Poppins',sans-serif;
+    transition:background 1s;
+}
+
+/* UI PANELS */
+.panel {
+    position:fixed;
+    top:15px;
+    padding:10px 20px;
+    border-radius:20px;
+    backdrop-filter:blur(12px);
+    background:rgba(0,0,0,0.4);
+    color:#fff;
+    font-weight:bold;
+    box-shadow:0 0 15px rgba(255,255,255,0.2);
+}
+#score { right:20px; }
+#missed { left:20px; }
+
+/* TITLE */
+h1 {
+    position:fixed;
+    top:15px;
+    left:50%;
+    transform:translateX(-50%);
+    font-size:26px;
+    font-weight:bold;
+    color:#fff;
+    text-shadow:0 0 10px rgba(255,255,255,0.8),
+                0 0 20px rgba(255,215,0,0.6);
+}
+
+/* PREMIUM TEXT */
+#bottomText {
+    position:fixed;
+    bottom:15px;
+    width:100%;
+    text-align:center;
+    font-size:28px;
+    font-weight:bold;
+
+    background:linear-gradient(45deg,gold,orange,pink,gold);
+    background-size:300%;
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+    animation:shine 4s linear infinite;
+}
+@keyframes shine {
+    from {background-position:0%;}
+    to {background-position:300%;}
+}
+
+/* START */
+#startScreen {
+    position:fixed;
+    width:100%;
+    height:100%;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    flex-direction:column;
+    background:#000;
+    color:#fff;
+}
+#startBtn {
+    padding:18px 45px;
+    border:none;
+    border-radius:40px;
+    background:linear-gradient(45deg,gold,orange,pink);
+    box-shadow:0 0 25px gold;
+    font-size:20px;
+}
+
+/* OBJECTS */
+.balloon,.cake {
+    width:100px;
+    height:120px;
+    position:absolute;
+    cursor:pointer;
+}
+.balloon { border-radius:50%; }
+.cake { background:pink; border-radius:10px; }
+
+.string {
+    width:3px;
+    height:50px;
+    background:#555;
+    position:absolute;
+    top:120px;
+    left:48px;
+}
+
+/* CANDLE */
+.candle {
+    width:6px;
+    height:20px;
+    background:white;
+    position:absolute;
+    top:-20px;
+    left:46px;
+}
+.flame {
+    width:8px;
+    height:10px;
+    background:orange;
+    border-radius:50%;
+    animation:flicker 0.2s infinite alternate;
+}
+@keyframes flicker {
+    from {transform:scale(1);}
+    to {transform:scale(1.3);}
+}
+
+/* SUN / MOON */
+#sun,#moon {
+    position:fixed;
+    top:60px;
+    right:80px;
+    width:60px;
+    height:60px;
+    border-radius:50%;
+}
+#sun { background:yellow; box-shadow:0 0 40px yellow; }
+#moon { background:#fdf5c9; display:none; }
+
+.star {
+    position:fixed;
+    width:3px;
+    height:3px;
+    background:white;
+}
+
+/* GAME OVER */
+#gameOver {
+    position:fixed;
+    width:100%;
+    height:100%;
+    display:none;
+    justify-content:center;
+    align-items:center;
+    flex-direction:column;
+    background:rgba(0,0,0,0.7);
+    color:#fff;
+}
+#kingTitle {
+    font-size:40px;
+    color:gold;
+}
+
+/* EFFECTS */
+.particle,.firework {
+    position:absolute;
+    width:6px;
+    height:6px;
+    border-radius:50%;
+    animation:explode 1s forwards;
+}
+@keyframes explode {
+    to {
+        transform:translate(var(--x),var(--y));
+        opacity:0;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div id="startScreen">
+<h2>🎂 Ready?</h2>
+<button id="startBtn">✨ Start Game ✨</button>
+</div>
+
+<h1>🎈 Burst the Balloons</h1>
+<div id="score" class="panel">Score: 0</div>
+<div id="missed" class="panel">Missed: 0</div>
+<div id="bottomText">🎉 HAPPY BIRTHDAY 🎉</div>
+
+<div id="sun"></div>
+<div id="moon"></div>
+
+<div id="gameOver">
+<div id="kingTitle">👑 BIRTHDAY QUEEN 👑</div>
+<h1 id="finalScore"></h1>
+<button onclick="location.reload()">Restart</button>
+</div>
+
+<audio id="burstSound" src="https://www.soundjay.com/buttons/sounds/button-09.mp3"></audio>
+<audio id="bgMusic" src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" loop></audio>
+<audio id="fireSound" src="https://www.soundjay.com/explosion/sounds/explosion-01.mp3"></audio>
+
+<script>
+let score=0, missed=0, running=false, lastPop=0, combo=1;
+
+const scoreEl=document.getElementById("score");
+const missedEl=document.getElementById("missed");
+const sun=document.getElementById("sun");
+const moon=document.getElementById("moon");
+
+startBtn.onclick=()=>{
+    running=true;
+    startScreen.style.display="none";
+    bgMusic.volume=0.3;
+    bgMusic.play().catch(()=>{});
+    updateTheme();
+};
+
+function isCake(){ return Math.floor(score/50)%2===1; }
+
+function updateTheme(){
+    let night=Math.floor(score/50)%2;
+    const panels=document.querySelectorAll(".panel");
+    const title=document.querySelector("h1");
+
+    if(!night){
+        document.body.style.background="linear-gradient(#87CEEB,#fff)";
+        sun.style.display="block";
+        moon.style.display="none";
+
+        panels.forEach(p=>{
+            p.style.background="rgba(255,255,255,0.6)";
+            p.style.color="#000";
+        });
+        title.style.color="#000";
+
+        document.querySelectorAll(".star").forEach(s=>s.remove());
+    } else {
+        document.body.style.background="#000";
+        sun.style.display="none";
+        moon.style.display="block";
+
+        panels.forEach(p=>{
+            p.style.background="rgba(0,0,0,0.5)";
+            p.style.color="#fff";
+        });
+        title.style.color="#fff";
+
+        if(!document.querySelector(".star")){
+            for(let i=0;i<60;i++){
+                let s=document.createElement("div");
+                s.className="star";
+                s.style.left=Math.random()*innerWidth+"px";
+                s.style.top=Math.random()*innerHeight+"px";
+                document.body.appendChild(s);
+            }
+        }
+    }
+}
+
+function createObject(){
+    if(!running) return;
+
+    let obj=document.createElement("div");
+
+    if(isCake()){
+        obj.className="cake";
+        let c=document.createElement("div");
+        c.className="candle";
+        let f=document.createElement("div");
+        f.className="flame";
+        c.appendChild(f);
+        obj.appendChild(c);
+    } else {
+        obj.className="balloon";
+        obj.style.background=["red","blue","green","yellow"][Math.floor(Math.random()*4)];
+        let s=document.createElement("div");
+        s.className="string";
+        obj.appendChild(s);
+    }
+
+    obj.style.left=Math.random()*(innerWidth-100)+"px";
+    obj.style.bottom="0px";
+    document.body.appendChild(obj);
+
+    let y=0;
+    let speed=isCake()?6:3;
+
+    let int=setInterval(()=>{
+        y+=speed;
+        obj.style.bottom=y+"px";
+
+        if(y>innerHeight){
+            obj.remove();
+            clearInterval(int);
+            missed++;
+            missedEl.innerText="Missed: "+missed;
+            if(missed>=10) endGame();
+        }
+    },20);
+
+    obj.addEventListener("pointerdown",()=>{
+        burstSound.currentTime=0;
+        burstSound.play();
+
+        let now=Date.now();
+        combo=(now-lastPop<600)?combo+1:1;
+        lastPop=now;
+
+        score+=combo;
+        scoreEl.innerText="Score: "+score+" x"+combo;
+
+        updateTheme();
+
+        createParticles(obj);
+
+        obj.remove();
+        clearInterval(int);
+    },{once:true});
+}
+
+function createParticles(el){
+    let r=el.getBoundingClientRect();
+    for(let i=0;i<10;i++){
+        let p=document.createElement("div");
+        p.className="particle";
+        p.style.left=r.left+"px";
+        p.style.top=r.top+"px";
+        p.style.background=el.style.background||"pink";
+        p.style.setProperty("--x",(Math.random()-0.5)*200+"px");
+        p.style.setProperty("--y",(Math.random()-0.5)*200+"px");
+        document.body.appendChild(p);
+        setTimeout(()=>p.remove(),700);
+    }
+}
+
+function endGame(){
+    running=false;
+    finalScore.innerText="Score: "+score;
+    gameOver.style.display="flex";
+
+    let fx=setInterval(()=>{
+        fireSound.currentTime=0;
+        fireSound.play();
+
+        for(let i=0;i<30;i++){
+            let f=document.createElement("div");
+            f.className="firework";
+            f.style.left=Math.random()*innerWidth+"px";
+            f.style.top=Math.random()*innerHeight/2+"px";
+            f.style.background=["red","yellow","blue","pink"][Math.floor(Math.random()*4)];
+            f.style.setProperty("--x",(Math.random()-0.5)*300+"px");
+            f.style.setProperty("--y",(Math.random()-0.5)*300+"px");
+            document.body.appendChild(f);
+            setTimeout(()=>f.remove(),1000);
+        }
+    },700);
+
+    setTimeout(()=>clearInterval(fx),5000);
+}
+
+setInterval(createObject,700);
+</script>
+
+</body>
+</html>

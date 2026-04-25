@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Birthday Messages</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@200;400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #050507;
+            --gold: #d4af37;
+            --glass: rgba(255, 255, 255, 0.03);
+            --glass-heavy: rgba(10, 10, 10, 0.95);
+            --text-main: #ffffff;
+            --text-dim: #b0b0b0;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #starfield {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .moon {
+            position: fixed;
+            top: 40px; right: 40px;
+            width: 60px; height: 60px;
+            background: #fff;
+            border-radius: 50%;
+            box-shadow: 0 0 40px rgba(255, 255, 255, 0.1);
+            z-index: 1;
+        }
+        .moon::after {
+            content: '';
+            position: absolute;
+            top: -5px; left: 15px;
+            width: 100%; height: 100%;
+            background: var(--bg-deep);
+            border-radius: 50%;
+        }
+
+        header {
+            position: relative;
+            z-index: 2;
+            margin-top: 80px;
+            text-align: center;
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            letter-spacing: 10px;
+            font-weight: 300;
+            text-transform: uppercase;
+            background: linear-gradient(to right, #d4af37, #fff, #d4af37);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .grid-container {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 90%;
+            max-width: 500px;
+            margin: 40px 0;
+        }
+
+        .name-card {
+            background: var(--glass);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 25px;
+            border-radius: 2px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
+
+        .name-card:hover {
+            border-color: var(--gold);
+            background: rgba(212, 175, 55, 0.08);
+            letter-spacing: 3px;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .name-card span {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-dim);
+            transition: color 0.4s;
+        }
+
+        .name-card:hover span {
+            color: var(--gold);
+        }
+
+        .modal {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: var(--glass-heavy);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            z-index: 10;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+        }
+
+        .modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            width: 85%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            text-align: center;
+            transform: translateY(30px);
+            transition: transform 0.6s ease;
+            padding: 40px 20px;
+        }
+
+        .modal.active .modal-content {
+            transform: translateY(0);
+        }
+
+        .modal-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            color: var(--gold);
+            margin-bottom: 25px;
+        }
+
+        .modal-text {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: var(--text-main);
+            font-style: italic;
+            font-weight: 200;
+            white-space: pre-line;
+        }
+
+        .message-image {
+            max-width: 100%;
+            height: auto;
+            margin-top: 25px;
+            border: 1px solid var(--gold);
+            padding: 5px;
+            border-radius: 2px;
+        }
+
+        .close-btn {
+            margin-top: 40px;
+            background: none;
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            padding: 12px 40px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: 0.3s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .close-btn:hover {
+            background: var(--gold);
+            color: #000;
+        }
+
+        /* Custom Scrollbar for Modal */
+        .modal-content::-webkit-scrollbar {
+            width: 3px;
+        }
+        .modal-content::-webkit-scrollbar-thumb {
+            background: var(--gold);
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="starfield"></canvas>
+    <div class="moon"></div>
+
+    <header>
+        <h1>BIRTHDAY MESSAGES</h1>
+    </header>
+
+    <div class="grid-container">
+        <div class="name-card" onclick="openModal('Disha')"><span>Disha</span></div>
+        <div class="name-card" onclick="openModal('Vrinda')"><span>Vrinda</span></div>
+        <div class="name-card" onclick="openModal('Rishika')"><span>Rishika</span></div>
+        <div class="name-card" onclick="openModal('Radha')"><span>Radha</span></div>
+        <div class="name-card" onclick="openModal('Shambhavi')"><span>Shambhavi</span></div>
+    </div>
+
+    <div class="modal" id="messageModal" onclick="closeModalOutside(event)">
+        <div class="modal-content">
+            <div class="modal-name" id="displayName"></div>
+            <div class="modal-text" id="displayText"></div>
+            <div id="imageContainer"></div>
+            <button class="close-btn" onclick="closeModal()">Close</button>
+        </div>
+    </div>
+
+    <script>
+        // Star Logic with Glistering Effect
+        const canvas = document.getElementById('starfield');
+        const ctx = canvas.getContext('2d');
+        let stars = [];
+
+        function initStars() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            stars = [];
+            for (let i = 0; i < 250; i++) {
+                stars.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    size: Math.random() * 1.8,
+                    opacity: Math.random(),
+                    speed: (Math.random() * 0.02) + 0.005,
+                    glister: Math.random() > 0.8 // Only some stars glister intensely
+                });
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            stars.forEach(s => {
+                s.opacity += s.speed;
+                if(s.opacity > 1 || s.opacity < 0.1) s.speed = -s.speed;
+                
+                let size = s.size;
+                if(s.glister && s.opacity > 0.8) size *= 1.5; // Glistering effect
+
+                ctx.fillStyle = `rgba(255, 255, 255, ${s.opacity})`;
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, size, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Optional: Subtle glow for glistering stars
+                if(s.glister && s.opacity > 0.9) {
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = "white";
+                } else {
+                    ctx.shadowBlur = 0;
+                }
+            });
+            requestAnimationFrame(animate);
+        }
+
+        // Messages Data
+        const messages = {
+            'Disha': `“To the person who adds magic to the mundane. Your journey this year has been inspiring to watch. May your birthday be a reflection of the beauty you bring into all our lives. Stay extraordinary.”`,
+            'Vrinda': `“Happy Birthday! I hope your day is filled with the kind of laughter that makes your stomach ache. You deserve a year of boundless growth, quiet peace, and loud celebrations.”`,
+            'Rishika': `“Another year of being fabulous! May the stars align to bring you every opportunity you’ve been working for. Cheers to the late nights, the inside jokes, and a brilliant year ahead.”`,
+            'Radha': `“Wishing you a day that is as peaceful as a moonlit night and as bright as the morning sun. You have a heart of gold, and I am so lucky to call you a friend. Happy Birthday!”`,
+            'Shambhavi': `Hey Vibhuti,  
+
+How have you been lately? 
+I know we don’t talk that often anymore, but I think of you when I see bougainvillaea or just a very fluffy cloud, or maybe the right swirl in a white coffee cup. 
+
+It has been such a long time since we have shared a cup of coffee or a gossip or two. I don’t have very many words to say, but I hope you are okay. 
+
+I wish that you get all the things you don’t say out loud. I hope the summer brings you nothing but joy this year.
+
+Happiest of birthdays, and many, many warm hugs, 
+Sham`
+        };
+
+        function openModal(name) {
+            const text = messages[name];
+            document.getElementById('displayName').innerText = name;
+            document.getElementById('displayText').innerText = text;
+            
+            const imgContainer = document.getElementById('imageContainer');
+            imgContainer.innerHTML = ''; // Clear previous images
+
+            // Add image specifically for Radha
+            if (name === 'Radha') {
+                const img = document.createElement('img');
+                img.src = 'image.jpeg'; // Ensure the file is in the same folder
+                img.className = 'message-image';
+                img.alt = 'Birthday Wish';
+                imgContainer.appendChild(img);
+            }
+
+            document.getElementById('messageModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('messageModal').classList.remove('active');
+        }
+
+        function closeModalOutside(e) {
+            if (e.target.id === 'messageModal') {
+                closeModal();
+            }
+        }
+
+        window.addEventListener('resize', initStars);
+        initStars();
+        animate();
+    </script>
+</body>
+</html>

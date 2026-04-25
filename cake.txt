@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Happy Birthday Beba ❤️</title>
+<style>
+body {
+  margin: 0;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: radial-gradient(circle at top, #1a1a2e, #0f3460);
+  color: white;
+  font-family: Arial, sans-serif;
+  overflow: hidden;
+}
+.container { text-align: center; }
+
+h1 { font-size: 3rem; margin-bottom: 70px; }
+
+.cake { position: relative; width: 240px; margin: auto; cursor: pointer; }
+.layer { height: 45px; border-radius: 12px; margin: 6px 0; }
+.layer1 { background: #ffb3c6; }
+.layer2 { background: #ff4d6d; }
+.layer3 { background: #c9184a; }
+
+.candles {
+  position: absolute;
+  top: -45px;
+  width: 100%;
+  display: flex;
+  justify-content: space-around;
+}
+
+.candle { width: 8px; height: 32px; background: white; position: relative; }
+.flame {
+  width: 8px; height: 10px; background: orange; border-radius: 50%;
+  position: absolute; top: -10px; left: 0;
+  animation: flicker 0.2s infinite;
+}
+
+.strong-flicker { animation: strongFlicker 0.08s infinite; }
+
+@keyframes flicker {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.4); }
+  100% { transform: scale(1); }
+}
+@keyframes strongFlicker {
+  0% { transform: scale(1) rotate(0deg); }
+  50% { transform: scale(1.8) rotate(5deg); }
+  100% { transform: scale(1); }
+}
+
+#message { margin-top: 25px; font-size: 18px; }
+
+/* knife cursor */
+.knife-cursor { cursor: url('https://cdn-icons-png.flaticon.com/32/1046/1046784.png'), auto; }
+
+/* cut effect */
+.cut { transform: scaleY(0.9) rotate(-5deg); transition: 0.4s; }
+
+canvas { position: fixed; top: 0; left: 0; pointer-events: none; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Happy Birthday Beba ❤️</h1>
+
+  <div class="cake" id="cake" onclick="cutCake()">
+    <div class="candles">
+      <div class="candle"><div class="flame"></div></div>
+      <div class="candle"><div class="flame"></div></div>
+      <div class="candle"><div class="flame"></div></div>
+      <div class="candle"><div class="flame"></div></div>
+      <div class="candle"><div class="flame"></div></div>
+      <div class="candle"><div class="flame"></div></div>
+    </div>
+
+    <div class="layer layer3"></div>
+    <div class="layer layer2"></div>
+    <div class="layer layer1"></div>
+  </div>
+
+  <div id="message">Allow mic & blow the candles 💨</div>
+</div>
+
+<canvas id="confetti"></canvas>
+
+<script>
+let audioContext, analyser, dataArray;
+let listening = false;
+let firstBlowDone = false;
+let candlesBlown = false;
+
+// voice message
+function speakWish() {
+  const msg = new SpeechSynthesisUtterance("Happy Birthday Beba ❤️");
+  msg.rate = 0.9;
+  speechSynthesis.speak(msg);
+}
+
+// wind sound
+function playWindSound() {
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const noiseBuffer = ctx.createBuffer(1, ctx.sampleRate * 1, ctx.sampleRate);
+  const output = noiseBuffer.getChannelData(0);
+  for (let i = 0; i < output.length; i++) output[i] = Math.random() * 2 - 1;
+  const noise = ctx.createBufferSource();
+  noise.buffer = noiseBuffer;
+  const gainNode = ctx.createGain();
+  gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
+  gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 1);
+  noise.connect(gainNode);
+  gainNode.connect(ctx.destination);
+  noise.start();
+}
+
+window.onload = () => startMic();
+
+async function startMic() {
+  const message = document.getElementById('message');
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const source = audioContext.createMediaStreamSource(stream);
+    analyser = audioContext.createAnalyser();
+    analyser.fftSize = 256;
+    source.connect(analyser);
+    dataArray = new Uint8Array(analyser.frequencyBinCount);
+    listening = true;
+    message.innerText = "Blow the candles 💨";
+    detectBlow();
+  } catch {
+    message.innerText = "Please allow microphone 😢";
+  }
+}
+
+function detectBlow() {
+  if (!listening) return;
+  analyser.getByteFrequencyData(dataArray);
+  let volume = dataArray.reduce((a, b) => a + b) / dataArray.length;
+  const flames = document.querySelectorAll('.flame');
+
+  if (!firstBlowDone && volume > 45) {
+    firstBlowDone = true;
+    flames.forEach(f => f.classList.add('strong-flicker'));
+    playWindSound();
+    document.getElementById('message').innerText = "Blow harder please... ZOOR LAGAO 💨🔥";
+    setTimeout(() => requestAnimationFrame(detectBlow), 800);
+    return;
+  }
+
+  if (firstBlowDone && volume > 60) {
+    listening = false;
+    playWindSound();
+    blowOutCandles();
+    return;
+  }
+
+  requestAnimationFrame(detectBlow);
+}
+
+function blowOutCandles() {
+  const flames = document.querySelectorAll('.flame');
+  const message = document.getElementById('message');
+  message.innerText = "Candles blown! Now cut the cake 🎂";
+
+  setTimeout(() => {
+    flames.forEach(f => f.style.display = 'none');
+    candlesBlown = true;
+    document.body.classList.add('knife-cursor');
+    launchConfetti();
+  }, 1200);
+}
+
+function cutCake() {
+  if (!candlesBlown) return;
+  const cake = document.getElementById('cake');
+  cake.classList.add('cut');
+  speakWish();
+  sidePopper();
+}
+
+// confetti burst
+const canvas = document.getElementById('confetti');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+let pieces = [];
+const colors = ["#ff0a54","#ff477e","#00f5d4","#9b5de5","#00bbf9"];
+
+function createConfetti(xStart) {
+  for (let i = 0; i < 120; i++) {
+    pieces.push({
+      x: xStart,
+      y: canvas.height / 2,
+      r: Math.random() * 6 + 3,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      angle: Math.random() * 2 * Math.PI,
+      speed: Math.random() * 6 + 3
+    });
+  }
+}
+
+function drawConfetti() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  pieces.forEach(p => {
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fillStyle = p.color;
+    ctx.fill();
+  });
+  pieces.forEach(p => {
+    p.x += Math.cos(p.angle) * p.speed;
+    p.y += Math.sin(p.angle) * p.speed + 2;
+  });
+}
+
+function launchConfetti() {
+  createConfetti(canvas.width / 2);
+  setInterval(drawConfetti, 20);
+}
+
+function sidePopper() {
+  createConfetti(0); // left side
+  createConfetti(canvas.width); // right side
+}
+</script>
+</body>
+</html>
